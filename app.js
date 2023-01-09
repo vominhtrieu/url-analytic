@@ -78,6 +78,12 @@ app.post("/log", (request, respond) => {
 });
 
 app.get("/list", (request, respond) => {
+  if (request.query.key !== process.env.API_KEY) {
+    respond.status(401).json({
+      message: 'Unauthorized',
+    });
+    return;
+  }
   Log.find({}, (error, logs) => {
     if (error) {
       respond.status(500).json({
