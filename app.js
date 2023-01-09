@@ -85,7 +85,7 @@ app.get("/list", (request, respond) => {
     });
     return;
   }
-  Log.find({}, (error, logs) => {
+  Log.find({}).sort({createdAt: -1}).exec((error, logs) => {
     if (error) {
       respond.status(500).json({
         message: 'Error fetching logs',
