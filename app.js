@@ -8,7 +8,9 @@ const Log = require('./models/Log');
 let geoip = null;
 try {
     geoip = require('geoip-lite');
-} catch (error) {}
+} catch (error) {
+  console.log(error);
+}
 
 if (!geoip) {
   console.log("Geo IP not supported");
