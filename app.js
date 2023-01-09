@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const logger = require('morgan');
+const querystring = require('querystring');
 const app = express();
 const Log = require('./models/Log');
 let geoip = null;
@@ -41,7 +42,7 @@ app.post("/log", (request, respond) => {
 
   const log = new Log({
     _id: new mongoose.Types.ObjectId(),
-    url: request.body.url,
+    url: querystring.decode(request.body.url),
     agent: request.get('User-Agent'),
     ipAddress: ipAddress,
     address: request.body.address,
