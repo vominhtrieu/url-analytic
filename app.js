@@ -31,7 +31,7 @@ app.get('/', (request, respond) => {
 });
 
 app.post("/log", (request, respond) => {
-    const ipAddress = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
+    const ipAddress = request.headers["x-real-ip"] || request.headers['x-forwarded-for'] || request.socket.remoteAddress;
     
     const log = new Log({
         _id: new mongoose.Types.ObjectId(),
@@ -45,12 +45,10 @@ app.post("/log", (request, respond) => {
         const geo = geoip.lookup(ipAddress);
         log.address = JSON.stringify(geo);
     }
-    console.log('info', log);
+    console.log(`${new Date()} - New Log is created`);
+    console.log(log)
     log.save();
-    respond.status(200).json({
-        message: 'Log saved successfully',
-        log: log,
-    });
+    respond.status(200).json("OK!");
 });
 
 app.get("/list", (request, respond) => {
