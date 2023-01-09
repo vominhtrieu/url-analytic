@@ -10,6 +10,10 @@ try {
     geoip = require('geoip-lite');
 } catch (error) {}
 
+if (!geoip) {
+  console.log("Geo IP not supported");
+}
+
 app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
@@ -44,6 +48,9 @@ app.post("/log", (request, respond) => {
     if (geoip) {
         const geo = geoip.lookup(ipAddress);
         log.address = JSON.stringify(geo);
+    }
+    if (!log.address) {
+      console.log("Could not found address for IP: " + ipAddress);
     }
     console.log(`${new Date()} - New Log is created`);
     console.log(log)
