@@ -47,7 +47,7 @@ app.post("/log", (request, respond) => {
         const geo = geoip.lookup(ipAddress);
         log.address = JSON.stringify(geo);
     }
-    logger.log('info', log);
+    console.log('info', log);
     log.save();
     respond.status(200).json({
         message: 'Log saved successfully',
