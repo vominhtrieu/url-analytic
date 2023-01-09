@@ -87,7 +87,7 @@ app.get("/list", (request, respond) => {
     } else {
       respond.status(200).json({
         message: 'Logs fetched successfully',
-        logs: logs,
+        logs: JSON.stringify(logs, null, 4),
       });
     }
   });
