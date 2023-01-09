@@ -47,9 +47,13 @@ const logSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-    url: {
+    pathname: {
         type: String,
         required: true,
+    },
+    query: {
+        type: Object,
+        required: false,
     },
     agent: {
         type: String,

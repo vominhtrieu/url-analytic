@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const logger = require('morgan');
+const url = require('url');
 const querystring = require('querystring');
 const app = express();
 const Log = require('./models/Log');
@@ -39,10 +40,13 @@ app.get('/', (request, respond) => {
 
 app.post("/log", (request, respond) => {
   const ipAddress = request.headers["x-real-ip"] || request.headers['x-forwarded-for'] || request.socket.remoteAddress;
+  const u = url.parse(request.body.url);
+  const query = querystring.parse(u.query);
 
   const log = new Log({
     _id: new mongoose.Types.ObjectId(),
-    url: querystring.decode(request.body.url),
+    pathname: u.pathname,
+    query: query,
     agent: request.get('User-Agent'),
     ipAddress: ipAddress,
     address: request.body.address,
@@ -50,16 +54,18 @@ app.post("/log", (request, respond) => {
 
   if (geoip) {
     const geo = geoip.lookup(ipAddress);
-    log.address = {
-      country: geo.country,
-      region: geo.region,
-      city: geo.city,
-      eu: geo.eu,
-      timezone: geo.timezone,
-      latitude: geo.ll[0],
-      longitude: geo.ll[1],
-      metro: geo.metro,
-      area: geo.area,
+    if (geo) {
+      log.address = {
+        country: geo.country,
+        region: geo.region,
+        city: geo.city,
+        eu: geo.eu,
+        timezone: geo.timezone,
+        latitude: geo.ll[0],
+        longitude: geo.ll[1],
+        metro: geo.metro,
+        area: geo.area,
+      }
     }
   }
   if (!log.address) {
