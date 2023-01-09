@@ -6,6 +6,10 @@ const mongoose = require('mongoose');
 const logger = require('morgan');
 const app = express();
 const Log = require('./models/Log');
+let geoip = null;
+try {
+    geoip = require('geoip-lite');
+} catch (error) {}
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -30,13 +34,36 @@ app.get('/', (request, respond) => {
 
 app.post("/log", (request, respond) => {
     const ipAddress = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
-    console.log(ipAddress)
+    
     const log = new Log({
         _id: new mongoose.Types.ObjectId(),
         url: request.body.url,
-        agent: request.body.agent,
-        ipAddress: request.body.ipAddress,
+        agent:  request.get('User-Agent'),
+        ipAddress: ipAddress,
         address: request.body.address,
+    });
+
+    if (geoip) {
+        const geo = geoip.lookup(ipAddress);
+        log.address = JSON.stringify(geo);
+    }
+    console.log(log);
+    log.save();
+});
+
+app.get("/list", (request, respond) => {
+    Log.find({}, (error, logs) => {
+        if (error) {
+            respond.status(500).json({
+                message: 'Error fetching logs',
+                error: error,
+            });
+        } else {
+            respond.status(200).json({
+                message: 'Logs fetched successfully',
+                logs: logs,
+            });
+        }
     });
 });
 
