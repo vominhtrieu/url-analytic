@@ -7,7 +7,7 @@ const app = express();
 const Log = require('./models/Log');
 let geoip = null;
 try {
-    geoip = require('geoip-lite');
+  geoip = require('geoip-lite');
 } catch (error) {
   console.log(error);
 }
@@ -22,10 +22,10 @@ app.use(express.json());
 
 mongoose.set('strictQuery', false);
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(()=> {
+  .then(() => {
     console.log('Database connected');
   })
-  .catch((error)=> {
+  .catch((error) => {
     console.log('Error connecting to database');
     console.log(error)
   });
@@ -37,43 +37,53 @@ app.get('/', (request, respond) => {
 });
 
 app.post("/log", (request, respond) => {
-    const ipAddress = request.headers["x-real-ip"] || request.headers['x-forwarded-for'] || request.socket.remoteAddress;
-    
-    const log = new Log({
-        _id: new mongoose.Types.ObjectId(),
-        url: request.body.url,
-        agent:  request.get('User-Agent'),
-        ipAddress: ipAddress,
-        address: request.body.address,
-    });
+  const ipAddress = request.headers["x-real-ip"] || request.headers['x-forwarded-for'] || request.socket.remoteAddress;
 
-    if (geoip) {
-        const geo = geoip.lookup(ipAddress);
-        log.address = JSON.stringify(geo);
+  const log = new Log({
+    _id: new mongoose.Types.ObjectId(),
+    url: request.body.url,
+    agent: request.get('User-Agent'),
+    ipAddress: ipAddress,
+    address: request.body.address,
+  });
+
+  if (geoip) {
+    const geo = geoip.lookup(ipAddress);
+    log.address = {
+      country: geo.country,
+      region: geo.region,
+      city: geo.city,
+      eu: geo.eu,
+      timezone: geo.timezone,
+      latitude: geo.ll[0],
+      longitude: geo.ll[1],
+      metro: geo.metro,
+      area: geo.area,
     }
-    if (!log.address) {
-      console.log("Could not found address for IP: " + ipAddress);
-    }
-    console.log(`${new Date()} - New Log is created`);
-    console.log(log)
-    log.save();
-    respond.status(200).json("OK!");
+  }
+  if (!log.address) {
+    console.log("Could not found address for IP: " + ipAddress);
+  }
+  console.log(`${new Date()} - New Log is created`);
+  console.log(log)
+  log.save();
+  respond.status(200).json("OK!");
 });
 
 app.get("/list", (request, respond) => {
-    Log.find({}, (error, logs) => {
-        if (error) {
-            respond.status(500).json({
-                message: 'Error fetching logs',
-                error: error,
-            });
-        } else {
-            respond.status(200).json({
-                message: 'Logs fetched successfully',
-                logs: logs,
-            });
-        }
-    });
+  Log.find({}, (error, logs) => {
+    if (error) {
+      respond.status(500).json({
+        message: 'Error fetching logs',
+        error: error,
+      });
+    } else {
+      respond.status(200).json({
+        message: 'Logs fetched successfully',
+        logs: logs,
+      });
+    }
+  });
 });
 
 app.listen(process.env.PORT, (request, respond) => {
