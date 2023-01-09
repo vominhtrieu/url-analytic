@@ -21,6 +21,7 @@ if (!geoip) {
 app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
+app.set('json spaces', 2)
 
 mongoose.set('strictQuery', false);
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -93,7 +94,7 @@ app.get("/list", (request, respond) => {
     } else {
       respond.status(200).json({
         message: 'Logs fetched successfully',
-        logs: JSON.stringify(logs, null, 4),
+        logs: logs,
       });
     }
   });
