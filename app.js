@@ -104,7 +104,21 @@ app.get("/list", (request, respond) => {
         } else {
           respond.status(200).json({
             message: "Logs fetched successfully",
-            logs: logs,
+            logs: logs.map((log) => ({
+              ...log,
+              createdAt:
+                log.createdAt.getDay() +
+                "/" +
+                log.createdAt.getMonth() +
+                "/" +
+                log.createdAt.getFullYear() +
+                " " +
+                log.createdAt.getHours() +
+                ":" +
+                log.createdAt.getMinutes() +
+                ":" +
+                log.createdAt.getSeconds(),
+            })),
           });
         }
       });
