@@ -7,7 +7,15 @@ const addressSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    countryCode: {
+        type: String,
+        required: false,
+    },
     region: {
+        type: String,
+        required: false,
+    },
+    regionName: {
         type: String,
         required: false,
     },
@@ -23,20 +31,24 @@ const addressSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
-    latitude: {
+    lat: {
         type: Number,
         required: false,
     },
-    longitude: {
+    lon: {
         type: Number,
         required: false,
     },
-    metro: {
-        type: Number,
+    isp: {
+        type: String,
         required: false,
     },
-    area: {
-        type: Number,
+    org: {
+        type: String,
+        required: false,
+    },
+    as: {
+        type: String,
         required: false,
     },
 });

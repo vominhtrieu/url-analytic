@@ -1,47 +1,45 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const logger = require('morgan');
-const url = require('url');
-const querystring = require('querystring');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const logger = require("morgan");
+const url = require("url");
+const querystring = require("querystring");
 const app = express();
-const Log = require('./models/Log');
-let geoip = null;
-try {
-  geoip = require('geoip-lite');
-} catch (error) {
-  console.log(error);
-}
-
-if (!geoip) {
-  console.log("Geo IP not supported");
-}
+const Log = require("./models/Log");
+const axios = require("axios");
 
 app.use(cors());
-app.use(logger('dev'));
+app.use(logger("dev"));
 app.use(express.json());
-app.set('json spaces', 2)
+app.set("json spaces", 2);
 
-mongoose.set('strictQuery', false);
-mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.set("strictQuery", false);
+mongoose
+  .connect(process.env.DATABASE_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
-    console.log('Database connected');
+    console.log("Database connected");
   })
   .catch((error) => {
-    console.log('Error connecting to database');
-    console.log(error)
+    console.log("Error connecting to database");
+    console.log(error);
   });
 
-app.get('/', (request, respond) => {
+app.get("/", (request, respond) => {
   respond.status(200).json({
-    message: 'Welcome to URL Analyzer API',
+    message: "Welcome to URL Analyzer API",
   });
 });
 
-app.post("/log", (request, respond) => {
+app.post("/log", async (request, respond) => {
   try {
-    const ipAddress = request.headers["x-real-ip"] || request.headers['x-forwarded-for'] || request.socket.remoteAddress;
+    const ipAddress =
+      request.headers["x-real-ip"] ||
+      request.headers["x-forwarded-for"] ||
+      request.socket.remoteAddress;
     const u = url.parse(request.body.url);
     const query = querystring.parse(u.query);
 
@@ -49,38 +47,39 @@ app.post("/log", (request, respond) => {
       _id: new mongoose.Types.ObjectId(),
       pathname: u.pathname,
       query: query,
-      agent: request.get('User-Agent'),
+      agent: request.get("User-Agent"),
       ipAddress: ipAddress,
       address: request.body.address,
     });
 
-    if (geoip) {
-      const geo = geoip.lookup(ipAddress);
-      if (geo) {
-        log.address = {
-          country: geo.country,
-          region: geo.region,
-          city: geo.city,
-          eu: geo.eu,
-          timezone: geo.timezone,
-          latitude: geo.ll[0],
-          longitude: geo.ll[1],
-          metro: geo.metro,
-          area: geo.area,
-        }
-      }
+    const { data } = await axios.get("http://ip-api.com/json/" + ipAddress);
+
+    if (data) {
+      log.address = {
+        country: data.country,
+        countryCode: data.countryCode,
+        region: data.region,
+        regionName: data.regionName,
+        city: data.city,
+        lat: data.lat,
+        lon: data.lon,
+        timezone: data.timezone,
+        isp: data.isp,
+        org: data.org,
+        as: data.as,
+      };
     }
     if (!log.address) {
       console.log("Could not found address for IP: " + ipAddress);
     }
     console.log(`${new Date()} - New Log is created`);
-    console.log(log)
+    console.log(log);
     log.save();
     respond.status(200).json("OK!");
   } catch (error) {
     console.log(error);
     respond.status(500).json({
-      message: 'Error saving log',
+      message: "Error saving log",
       error: error,
     });
   }
@@ -90,27 +89,29 @@ app.get("/list", (request, respond) => {
   try {
     if (request.query.key !== process.env.API_KEY) {
       respond.status(401).json({
-        message: 'Unauthorized',
+        message: "Unauthorized",
       });
       return;
     }
-    Log.find({}).sort({ createdAt: -1 }).exec((error, logs) => {
-      if (error) {
-        respond.status(500).json({
-          message: 'Error fetching logs',
-          error: error,
-        });
-      } else {
-        respond.status(200).json({
-          message: 'Logs fetched successfully',
-          logs: logs,
-        });
-      }
-    });
+    Log.find({})
+      .sort({ createdAt: -1 })
+      .exec((error, logs) => {
+        if (error) {
+          respond.status(500).json({
+            message: "Error fetching logs",
+            error: error,
+          });
+        } else {
+          respond.status(200).json({
+            message: "Logs fetched successfully",
+            logs: logs,
+          });
+        }
+      });
   } catch (error) {
     console.log(error);
     respond.status(500).json({
-      message: 'Error fetching logs',
+      message: "Error fetching logs",
       error: error,
     });
   }
