@@ -102,6 +102,7 @@ app.get("/list", (request, respond) => {
             error: error,
           });
         } else {
+          logs = logs.map((log) => log.toObject());
           respond.status(200).json({
             message: "Logs fetched successfully",
             logs: logs.map((log) => ({
