@@ -85,6 +85,29 @@ app.post("/log", async (request, respond) => {
   }
 });
 
+function formatInt(number, minimumCharacter) {
+  if (number < 10) {
+    return "0".repeat(minimumCharacter - 1) + number;
+  }
+  return number + "";
+}
+
+function formatDate(date) {
+  return (
+    date.getFullYear() +
+    "-" +
+    formatInt(date.getMonth() + 1, 2) +
+    "-" +
+    formatInt(date.getDate(), 2) +
+    " " +
+    formatInt(date.getHours(), 2) +
+    ":" +
+    formatInt(date.getMinutes(), 2) +
+    ":" +
+    formatInt(date.getSeconds(), 2)
+  );
+}
+
 app.get("/list", (request, respond) => {
   try {
     if (request.query.key !== process.env.API_KEY) {
@@ -107,20 +130,9 @@ app.get("/list", (request, respond) => {
             message: "Logs fetched successfully",
             logs: logs.map((log) => ({
               ...log,
-              createdAt:
-                log.createdAt.getDay() +
-                "/" +
-                log.createdAt.getMonth() +
-                "/" +
-                log.createdAt.getFullYear() +
-                " " +
-                log.createdAt.getHours() +
-                ":" +
-                log.createdAt.getMinutes() +
-                ":" +
-                log.createdAt.getSeconds(),
-            })),
-          });
+              createdAt: formatDate(log.createdAt),
+          })),
+        });
         }
       });
   } catch (error) {
